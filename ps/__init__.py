@@ -220,7 +220,26 @@ class Particle():
         self.scale = (sx, sy, sz)
 
 
+#=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+# Getting and setting the vertices
+#=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+    @property
+    def vertices(self):
+        bpy.ops.object.select_all(action='DESELECT')
+        bpy.data.objects[self.name].select_set(True)
+        bpy.context.view_layer.objects.active = bpy.data.objects[self.name]
+        return [v.co for v in bpy.context.active_object.data.vertices] 
 
+    def set_vertices(self, vertex, new_coordinate):
+        if bpy.context.active_object.mode == 'EDIT':
+            bpy.ops.object.editmode_toggle()
+        bpy.ops.object.select_all(action='DESELECT')
+        bpy.data.objects[self.name].select_set(True)
+        bpy.context.active_object.data.vertices[vertex].co = new_coordinate
+
+
+#=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+#=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
     def apply_transformations(self, location=True, rotation=True, scale=True):
         """
         This function reset informations about position, rotation and scale of the particle
@@ -231,24 +250,6 @@ class Particle():
         self.scale = ((0,0,0) if scale else self.sclae)
 
 
-
-
-#=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# Getting and setting the vertices
-#=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-    @property
-    def vertex(self):
-        bpy.ops.object.select_all(action='DESELECT')
-        bpy.data.objects[self.name].select_set(True)
-        bpy.context.view_layer.objects.active =  bpy.data.objects[self.name]
-        v = []
-        for vert in bpy.context.active_object.data.vertices:
-            v.append(vert.co)
-        return v
-
-    def set_vertices(self, vertex, coordinate):
-            bpy.data.objects[self.name].select_set(True)
-            bpy.context.active_object.data.vertices[vertex].co = coordinate
 
 
 #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
