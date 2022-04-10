@@ -1,0 +1,7 @@
+# Needed packages/versions
+bpy
+math
+numpy
+pandas
+sympy
+sqlite3
