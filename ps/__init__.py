@@ -122,10 +122,10 @@ class Scene():
 
 #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-def setting_particle(self, creating):
+def setting_particle(self, create):
     """
     This function contains the functions responsible to delete previous objects with the same name as the one that is being created,
-    as well as creating a collection and putting the object in the right collection
+    as well as create a collection and putting the object in the right collection
     """
     def creating_collection():
             exist = False
@@ -171,7 +171,7 @@ def setting_particle(self, creating):
     creating_collection()
     if self.delete_previous:
         deleting_previous()
-    creating()
+    create()
     putting_in_the_right_collection()
 
 
@@ -251,7 +251,6 @@ class Particle():
 
 
 
-
 #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 # Putting a keyframe
 #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -272,12 +271,41 @@ class Sphere(Particle):
         super().__init__(name = name, collection = collection, position = position, rotation = rotation, scale = scale, data = data)
         self.delete_previous = delete_previous
 
-        setting_particle(self, self.creating)
+        setting_particle(self, self.create)
 
 
-    def creating(self):
+    def create(self):
         bpy.ops.mesh.primitive_uv_sphere_add(radius=1, enter_editmode=False, align='WORLD', location=self.position, scale=self.scale)
         bpy.context.object.name = self.name
+
+
+
+
+#=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+#=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+class Mesh(Particle):
+    def __init__(self, name = 'mesh', collection = 'Collection', position = (0, 0, 0), rotation = (0, 0, 0), scale = (1,1,1), verts = [], edges = [], faces = [], data = None, delete_previous = True):
+        super().__init__(name = name, collection = collection, position = position, rotation = rotation, scale = scale, data = data)
+        self.delete_previous = delete_previous
+        self.verts = verts 
+        self.edges = edges 
+        self.faces = faces
+
+
+        setting_particle(self, self.create)
+
+
+    def create(self):
+        # verts = bpy.context.active_object.data.vertices
+        # edges = bpy.context.active_object.data.edges
+        # faces = bpy.context.active_object.data.polygons
+
+        mesh = bpy.data.meshes.new(self.name)
+        obj = bpy.data.objects.new(self.name, mesh)
+        col = bpy.data.collections.get(self.collection)
+        col.objects.link(obj)
+        bpy.context.view_layer.objects.active = obj 
+        mesh.from_pydata(self.verts, self.edges, self.faces)
 
 
 
@@ -290,10 +318,10 @@ class Camera(Particle):
         self.focal_length = focal_length
         self.delete_previous = delete_previous
 
-        setting_particle(self, self.creating)
+        setting_particle(self, self.create)
 
 
-    def creating(self):
+    def create(self):
         bpy.ops.object.camera_add(enter_editmode=False, align='VIEW', location=self.position, rotation=self.rotation, scale=self.scale)
         bpy.context.object.name = self.name
         bpy.context.object.data.lens = self.focal_length
@@ -308,10 +336,10 @@ class Timer(Particle):
         self.frame = frame
         self.delete_previous = delete_previous
 
-        setting_particle(self, self.creating)
+        setting_particle(self, self.create)
 
 
-    def creating(self):
+    def create(self):
         bpy.ops.object.text_add(enter_editmode=False,  align='WORLD', location=self.position, rotation=self.rotation, scale=self.scale)
         bpy.ops.object.modifier_add(type='SOLIDIFY')
         bpy.context.object.modifiers["Solidify"].thickness = 0.02
@@ -358,3 +386,8 @@ class Timer(Particle):
 #        bpy.ops.font.delete(type='PREVIOUS_WORD')
 #        bpy.ops.font.text_insert(text= contxt)
 #        bpy.ops.object.editmode_toggle()
+
+
+
+if __name__ == "__main__":
+    m = Mesh(verts = [(0,1,0),(1,0,0),(0,0,1),(-1,0,0)], edges = [(0,1),(1,2),(0,2),(0,3),(2,3)], faces = [(0,1,2),(2,0,3)])
