@@ -122,10 +122,18 @@ class Scene():
 
 #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-def setting_particle(self, create):
-    """
-    This function contains the functions responsible to delete previous objects with the same name as the one that is being created,
+def setting_particle(self, set):
+    """This function contains the functions responsible to delete previous objects with the name as the one that is being created,
     as well as create a collection and putting the object in the right collection
+    Args:
+        set (list): It is a list with four booleans that define with the function:
+
+            creating_collection
+            deleting_previous
+            create
+            putting_in_the_right_collection
+
+        will be executed.
     """
     def creating_collection():
             exist = False
@@ -168,13 +176,14 @@ def setting_particle(self, create):
 #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 # Executting the internal functions
 #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    creating_collection()
-    if self.delete_previous:
-        deleting_previous()
-    create()
-    putting_in_the_right_collection()
-
-
+    if set[0]:
+        creating_collection()
+    if set[1]:
+            deleting_previous()
+    if set[2]:
+        self.create()
+    if set[3]:
+        putting_in_the_right_collection()
 
 
 
@@ -186,19 +195,23 @@ class Particle():
        ----------
        name : string
        position : array (x,y,z)
-       rotation : array (x,y,z)
-       scale : array (x,y,z)
+       rotation : array (yz,zx,xy)
+       scale : array (sx,sy,sz)
        collection : string : (It is the name of the collection to which the particle belongs),
        data (For when we want to link this particle with a database contanins informations such as the path, the momento, charge, and so on)
      """
 
-    def __init__(self, name = 'particle', collection = 'Collection', position = None, rotation = None, scale = None, data = None):
+    def __init__(self, name = 'particle', collection = 'Collection', position = None, rotation = None, scale = None, set = (True, False, False, True), data = None):
         self.name = name
         self.collection = collection
         self.position = (position if position != None else (bpy.data.objects[self.name].location[0], bpy.data.objects[self.name].location[1], bpy.data.objects[self.name].location[2]))
         self.rotation = (rotation if rotation != None else (bpy.data.objects[self.name].rotation_euler[0], bpy.data.objects[self.name].rotation_euler[1], bpy.data.objects[self.name].rotation_euler[2]))
         self.scale = (scale if scale != None else (bpy.data.objects[self.name].scale[0], bpy.data.objects[self.name].scale[1], bpy.data.objects[self.name].scale[2]))
+        self.set = set
         self.data = data
+
+
+        setting_particle(self, self.set)
 
 
 
@@ -210,9 +223,9 @@ class Particle():
         self.position = (x, y, z)
 
 
-    def rotate(self, yz = 0, xz = 0, xy = 0):
-        bpy.data.objects[self.name].rotation_euler = (yz, xz, xy)
-        self.rotation = (yz, xz, xy)
+    def rotate(self, yz = 0, zx = 0, xy = 0):
+        bpy.data.objects[self.name].rotation_euler = (yz, zx, xy)
+        self.rotation = (yz, zx, xy)
 
 
     def resize(self, sx = 1, sy = 1, sz = 1):
@@ -267,12 +280,8 @@ class Particle():
 #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 class Sphere(Particle):
-    def __init__(self, name = 'sphere', collection = 'Collection', position = (0, 0, 0), rotation = (0, 0, 0), scale = (1,1,1), data = None, delete_previous = True):
-        super().__init__(name = name, collection = collection, position = position, rotation = rotation, scale = scale, data = data)
-        self.delete_previous = delete_previous
-
-        setting_particle(self, self.create)
-
+    def __init__(self, name = 'sphere', collection = 'Collection', position = (0, 0, 0), rotation = (0, 0, 0), scale = (1,1,1), data = None, set = (True, True, True, True)):
+        super().__init__(name = name, collection = collection, position = position, rotation = rotation, scale = scale, data = data, set = set)
 
     def create(self):
         bpy.ops.mesh.primitive_uv_sphere_add(radius=1, enter_editmode=False, align='WORLD', location=self.position, scale=self.scale)
