@@ -6,8 +6,8 @@ from setuptools import setup, find_packages
 # Call setup function
 setup(
     author="Allison Eduardo",
-    description="blender particle script",
-    name="ps",
+    description="Blender Script",
+    name="bs",
     version="0.1.0",
     packages=find_packages(include=["ps", "ps.*"]),
     install_requires=["pandas",

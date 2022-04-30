@@ -1,12 +1,10 @@
-# from . import *
 import bpy
 import math
 import numpy as np
 import pandas as pd
 
-
 #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-# Scene configuration 
+# Scene settings 
 #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 class Scene():
     """This class contains functions to configure the scene 
@@ -43,9 +41,9 @@ class Scene():
             bpy.ops.object.editmode_toggle()
 
         for obj in bpy.data.objects:
-            obj.hide_set(False)
-            obj.hide_select = False
-            obj.hide_viewport = False
+            obj.hide_render_set(False)
+            obj.hide_render_select = False
+            obj.hide_render_viewport = False
 
         bpy.ops.object.select_all(action="SELECT")
         bpy.ops.object.delete()
@@ -122,33 +120,34 @@ class Scene():
 
 
 
-
-
 #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 # Exterior functions for the Particle class
 #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-def activate_object(self, deselect_other = True, hide = False): 
+def particle_visibility(self, deselect_other = True, hide_viewport = False, hide_render = False, globally_viewport = False): 
     """This function is responsable to activate objects of the scene
 
     Args:
         deselect_other (bool, optional): Defaults to True.
-        hide (bool, optional): it is responsable for hide the object. Defaults to False.
+        hide_render (bool, optional): it is responsable for hide_render the object. Defaults to False.
     """
     if deselect_other:
         bpy.ops.object.select_all(action='DESELECT')
+    
     bpy.data.objects[self.name].select_set(True)
-    bpy.context.view_layer.objects.active =  bpy.data.objects[self.name]
-    bpy.data.objects[self.name].hide_render = hide
+    bpy.context.view_layer.objects.active = bpy.data.objects[self.name]
+    bpy.context.active_object.hide_set(hide_viewport) 
+    bpy.data.objects[self.name].hide_render = hide_render
+    bpy.context.active_object.hide_viewport = globally_viewport
     if bpy.context.active_object.mode == 'EDIT':
         bpy.ops.object.editmode_toggle()
 
 #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-def setting_particle(self, set):
+def setting_particle(self, setting):
     """This function contains the functions responsible to delete previous objects with the name as the one that is being created,
     as well as create a collection and putting the object in the right collection
     Args:
-        set (list): It is a list with four booleans that define with the function:
+        setting (list): It is a list with four booleans that define with the function:
 
             creating_collection
             deleting_previous
@@ -171,7 +170,7 @@ def setting_particle(self, set):
 
     def deleting_previous():
             try:
-                activate_object(self)
+                particle_visibility(self)
                 bpy.ops.object.delete()
             except:
                 pass
@@ -194,19 +193,19 @@ def setting_particle(self, set):
 #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 # Executting the internal functions of setting particle function 
 #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    if set[0]:
+    if setting[0]:
         creating_collection()
-    if set[1]:
+    if setting[1]:
         deleting_previous()
-    if set[2]:
+    if setting[2]:
         self.create_particle_shape()
-    if set[3]:
+    if setting[3]:
         putting_in_the_right_collection()
 
 
 
 #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-# Particle class
+# Particle classes
 #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 class Particle():
     """This class create a particle with the following characteristics:
@@ -220,17 +219,17 @@ class Particle():
        data (For when we want to link this particle with a database contanins informations such as the path, the momento, charge, and so on)
      """
 
-    def __init__(self, name = 'particle', collection = 'Collection', position = None, rotation = None, scale = None, set = (True, False, False, True), data = None):
+    def __init__(self, name = 'particle', collection = 'Collection', position = None, rotation = None, scale = None, setting = (True, False, False, True), data = None):
         self.name = name
         self.collection = collection
         self.position = (position if position != None else (bpy.data.objects[self.name].location[0], bpy.data.objects[self.name].location[1], bpy.data.objects[self.name].location[2]))
         self.rotation = (rotation if rotation != None else (bpy.data.objects[self.name].rotation_euler[0], bpy.data.objects[self.name].rotation_euler[1], bpy.data.objects[self.name].rotation_euler[2]))
         self.scale = (scale if scale != None else (bpy.data.objects[self.name].scale[0], bpy.data.objects[self.name].scale[1], bpy.data.objects[self.name].scale[2]))
-        self.set = set
+        self.setting = setting
         self.data = data
 
-
-        setting_particle(self, self.set)
+        
+        setting_particle(self, self.setting)
 
 
 
@@ -276,7 +275,7 @@ class Particle():
         """
         This function reset informations about position, rotation and scale of the particle
         """
-        activate_object(self)
+        particle_visibility(self)
 
         bpy.ops.object.transform_apply(location=location, rotation=rotation, scale=scale)
         self.position = ((0,0,0) if location else self.position)
@@ -302,12 +301,16 @@ class Particle():
 # Modifiers
 #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
     def create_modifier(self, name_of_modifier = "My_Modifier", type_of_modifier = "SUBSURF"):
-        activate_object(self)
+        particle_visibility(self)
         bpy.context.active_object.modifiers.new(name_of_modifier, type_of_modifier)
+
+    def skin(self, name_of_modifier = "Skin"):
+        bpy.context.active_object.modifiers.new(name_of_modifier,"SKIN")
     
     def shade_smooth(self):
-        activate_object(self)
-        bpy.ops.object.shade_smooth()        
+        particle_visibility(self)
+        bpy.ops.object.shade_smooth()   
+     
 
 
 
@@ -316,8 +319,8 @@ class Particle():
 # Creating paticles with a specific format
 #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 class Sphere(Particle):
-    def __init__(self, name = 'sphere', collection = 'Collection', position = (0, 0, 0), rotation = (0, 0, 0), scale = (1,1,1), data = None, set = (True, True, True, True)):
-        super().__init__(name = name, collection = collection, position = position, rotation = rotation, scale = scale, data = data, set = set)
+    def __init__(self, name = 'sphere', collection = 'Collection', position = (0, 0, 0), rotation = (0, 0, 0), scale = (1,1,1), data = None, setting = (True, True, True, True)):
+        super().__init__(name = name, collection = collection, position = position, rotation = rotation, scale = scale, data = data, setting = setting)
 
     def create_particle_shape(self):
         bpy.ops.mesh.primitive_uv_sphere_add(radius=1, enter_editmode=False, align='WORLD', location=self.position, scale=self.scale)
@@ -329,8 +332,8 @@ class Sphere(Particle):
 #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 class Mesh(Particle):
-    def __init__(self, name = 'mesh', collection = 'Collection', position = (0, 0, 0), rotation = (0, 0, 0), scale = (1,1,1), verts = [], edges = [], faces = [], data = None, set = (True, True, True, True)):
-        super().__init__(name = name, collection = collection, position = position, rotation = rotation, scale = scale, data = data, set = set)
+    def __init__(self, name = 'mesh', collection = 'Collection', position = (0, 0, 0), rotation = (0, 0, 0), scale = (1,1,1), verts = [], edges = [], faces = [], data = None, setting = (True, True, True, True)):
+        super().__init__(name = name, collection = collection, position = position, rotation = rotation, scale = scale, data = data, setting = setting)
         self.verts = verts 
         self.edges = edges 
         self.faces = faces
@@ -354,8 +357,8 @@ class Mesh(Particle):
 #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 class Camera(Particle):
-    def __init__(self, name='camera', collection = 'Collection', position = (0, 0, 0), rotation = (0, 0, 0), scale = (1, 1, 1), focal_length = 85, data = None, set = (True, True, True, True)):
-        super().__init__(name = name, collection = collection, position = position, rotation = rotation, scale = scale, data = data, set = set)
+    def __init__(self, name='camera', collection = 'Collection', position = (0, 0, 0), rotation = (0, 0, 0), scale = (1, 1, 1), focal_length = 85, data = None, setting = (True, True, True, True)):
+        super().__init__(name = name, collection = collection, position = position, rotation = rotation, scale = scale, data = data, setting = setting)
         self.focal_length = focal_length
 
 
@@ -369,8 +372,8 @@ class Camera(Particle):
 #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 class Timer(Particle):
-    def __init__(self, name = 'timer', collection = 'Collection', position = (0,0,0), rotation = (0,0,0), scale = (1,1,1), frame = 24, data = None, set = (True, True, True, True)):
-        super().__init__(name = name, collection = collection, position = position, rotation = rotation, scale = scale, data = data, set = set)
+    def __init__(self, name = 'timer', collection = 'Collection', position = (0,0,0), rotation = (0,0,0), scale = (1,1,1), frame = 24, data = None, setting = (True, True, True, True)):
+        super().__init__(name = name, collection = collection, position = position, rotation = rotation, scale = scale, data = data, setting = setting)
         self.frame = frame
 
 
@@ -400,29 +403,22 @@ class Timer(Particle):
 
 
 
-#class Text(Particle):
-#    def __init__(self, name, position = (0, 0, 0)):
-#        super().__init__(name = name, position = position)
-#
-#
-#    def create_particle_shape(self, context, location = (0, 0, 0)):
-#        if delete_previous:
-#            self.delete_previous()
-#
-#        bpy.ops.object.text_add(enter_editmode=True, location=location)
-#        bpy.context.object.name = self.name
-#        bpy.ops.font.delete(type='PREVIOUS_WORD')
-#        bpy.ops.font.text_insert(text= context)
-#
-#
-#    def rewrite(self, context, location = (0,0,0)):
-#        bpy.data.objects[self.name].select_set(True)
-#        bpy.ops.object.editmode_toggle()
-#        bpy.ops.font.delete(type='PREVIOUS_WORD')
-#        bpy.ops.font.text_insert(text= contxt)
-#        bpy.ops.object.editmode_toggle()
-
-
 
 if __name__ == "__main__":
-    m = Mesh(verts = [(0,1,0),(1,0,0),(0,0,1),(-1,0,0)], edges = [(0,1),(1,2),(0,2),(0,3),(2,3)], faces = [(0,1,2),(2,0,3)])
+    m = Mesh(verts = ((0,1,0),(1,0,0),(0,0,1),(-1,0,0)), edges = ([0,1],[1,2],[0,2],[0,3],[2,3]), faces = ([0,1,2],[2,0,3]))
+    
+
+# import bpy
+
+
+# verts = ((0,1,0),(1,0,0),(0,0,1),(-1,0,0))
+# edges = ([0,1],[1,2],[0,2],[0,3],[2,3])
+# faces = ([0,1,2],[2,0,3])
+
+# name = "New Object"
+# mesh = bpy.data.meshes.new(name)
+# obj = bpy.data.objects.new(name, mesh)
+# col = bpy.data.collections.get("Collection")
+# col.objects.link(obj)
+# bpy.context.view_layer.objects.active = obj
+# mesh.from_pydata(verts,edges,faces)
