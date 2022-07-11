@@ -1,8 +1,7 @@
 import bpy
 
-#=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-# Scene settings 
-#=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
 def set_frame_format(format = [1920, 1080]):
     """
     This function defines the format of the scene frame,
@@ -53,13 +52,11 @@ def clean_scene():
     __purge_orphans()
 
 
-
 def set_timeline(timeline):
     """
     It puts the time line at some position
     """
     bpy.context.scene.frame_set(timeline)
-
 
 
 def transform_pivot_point(type):
@@ -82,7 +79,6 @@ def transform_pivot_point(type):
 
     elif type == "active element":
         bpy.context.scene.tool_settings.transform_pivot_point = 'ACTIVE_ELEMENT'
-
 
 
 def transform_orientation(type):
@@ -110,10 +106,6 @@ def transform_orientation(type):
         bpy.context.scene.transform_orientation_slots[0].type = 'CURSOR'
 
 
-
-#=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-# Particle settings 
-#=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 def select_particle(name, deselect_others = True, select = True, active = True):
     """ It select and activate objects
 
@@ -128,7 +120,6 @@ def select_particle(name, deselect_others = True, select = True, active = True):
     bpy.data.objects[name].select_set(select)
     if active:
         bpy.context.view_layer.objects.active = bpy.data.objects[name]
-
 
 
 def set_particle_visibility(name, hide_select = False, hide_in_viewport = False, globally_viewport = False, hide_render = False, particle_in_object_mode = True): 
@@ -153,7 +144,6 @@ def set_particle_visibility(name, hide_select = False, hide_in_viewport = False,
         bpy.ops.object.editmode_toggle()
 
 
-
 def set_object_mode(mode = 'object'):
     """ It change the object mode 
 
@@ -162,7 +152,6 @@ def set_object_mode(mode = 'object'):
         'WEIGHT_PAINT' or 'TEXTURE_PAINT'. Defaults to 'OBJECT'.
     """
     bpy.ops.object.mode_set(mode=mode.upper())
-
 
 
 def apply_transformations(name, location=True, rotation=True, scale=True):
@@ -178,7 +167,6 @@ def apply_transformations(name, location=True, rotation=True, scale=True):
         name.scale = ((0,0,0) if scale else name.sclae)
     except:
         pass
-
 
 
 def create_collection(collection_name):
@@ -245,9 +233,8 @@ def put_keyframe(name, frame, data_path = 'location'):
     )
 
 def put_keyframe_vertices():
-    bpy.data.window_managers['WinMan'].animall_properties['key_points']
+    bpy.data.window_managers['WinMan'].animall_properties.key_points = True
     bpy.ops.anim.insert_keyframe_animall()
-
 
 
 def delete_keyframe():
@@ -256,3 +243,4 @@ def delete_keyframe():
 
 def change_cursor_position(position):
     bpy.context.scene.cursor.location = position
+
